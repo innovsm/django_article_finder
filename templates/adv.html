@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>
+            
+        </title>
+    </head>
+    <body>
+        <form id="contact" action="/alfa_adv" method="post">
+            {% csrf_token %}
+           
+           <h3><b>Article Finder Advanced</b></h3>
+           <h4>ENTER AUTHOR NAME ,INSTITUTION NAME, or Topice</h4>
+           <fieldset>
+             <input placeholder="article name" type="text" tabindex="1" required autofocus name = "author_name"><br>
+
+             <input placeholder= "institute_name" type = "text" tabindex = "2" name = "university" >
+           </fieldset>
+           <fieldset>
+             <button name="submit" type="submit" id="contact-submit" data-submit="...Sending">Submit</button>
+           </fieldset>
+         </form>  
+    </body>
+</html>
