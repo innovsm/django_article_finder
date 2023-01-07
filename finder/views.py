@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect,request
 # all functions will be here
 from urllib.request import urlopen 
 import pandas as pd
@@ -7,6 +7,8 @@ from bs4 import BeautifulSoup
 from  scholarly import scholarly as scholar
 from django.shortcuts import render
 from django.views.generic import TemplateView
+import numpy as np
+
 
 
 #-------------------------------------------------------------------------------
@@ -160,7 +162,9 @@ def final_function(author_name):
 class HomePageView(TemplateView):
     template_name = "alfa.html"
 
+class advanced(TemplateView):
 
+    template_name = "adv.html"
 def alfa_request(request):
     if(request.method == 'POST'):
         x_name= request.POST.get('test_name')
@@ -203,4 +207,147 @@ def hello_world(request):
         "affliation_data": article_aff[1],
         "publication": article_aff[0]
         })
+
+#---------------------------------------------------------------------------------
+
+
+def affliation_author(url):
+    example = "https://api.crossref.org/v1/works/{}".format(url.split(":")[1].strip().lower())
+    #print(example)
+    try:
+        json_data = pd.read_json(example, typ="Series")
+        aff_list = []
+        aff_list.append(json_data['message']['publisher'])
+        try:
+            university_list = []
+            for i in json_data['message']['author']:
+    
+                university_list.append(i['affiliation'][0]['name'])
+
+            #print(author_list)
+            aff_list.append(university_list)
+        except:
+            
+            aff_list.append("")
+            aff_list.append(json_data['message']['indexed']['date-time'])  # got date
+            aff_list.append(json_data['message']['title'][0])  # got titlle
+
+        author_list = []                                  # got authors details
+        for i in json_data['message']['author']:
+            alfa = i['given']+" "+i['family']
+            author_list.append(alfa)
+        aff_list.append(author_list)
+
+
+            
+
+        #print(aff_list)
+        return aff_list
+    except:
+        return list(0,0,0)
+    
+#---------------------------------------------------------------------------------
+
+def get_article_adv(article_name):
+    doi_details = []
+    final_list_dataframe = []
+
+    for i in range(1,5):
+        article_name = article_name.lower()  #%2C
+        article_name = article_name.replace(",", "%2C")
+        article_name = article_name.replace(" ", "+")
+        article_name = article_name.replace(":", "%3A")  #' '
+        article_name = article_name.replace(' ', "+")
+        try:
+
+            url_link  = "http://libgen.rs/scimag/"+"?q="+article_name+"&page={}".format(i)
+            #print(url_link)
+            html = urlopen(url_link)
+            bs = BeautifulSoup(html, 'html.parser')
+            if(bs.text.find("No articles were found") == -1):
+
+                x1_list =bs.find("table").find_all_next("td")
+                text_data = []
+                for i in x1_list:
+                    text_data.append(i.text)
+                
+                for i in text_data:
+                    if i.find("DOI")!= -1:
+                        x1 = i.find("DOI")
+                        doi_details.append(i[(x1):].rstrip())
+                #print(doi_details)
+                
+            else:
+                continue
+
+        except:
+            continue
+    #------------- PHASE - 2 ---------------------------------------
+    
+    for i in doi_details:
+        try:
+            x_1 = affliation_author(i)
+            x_2 = ['publication',"affliation",'date','title','author_list']
+            
+            dict_1 = dict(zip(x_2,x_1))
+            final_list_dataframe.append(dict_1)
+
+        except:
+            continue
+    return pd.DataFrame(final_list_dataframe)
+
+
+#-------------------------------------------------------
+def university_lookup(author_name,dict_final):   #dict_final
+    try:
+        return dict_final[author_name]
+    except:
+        return ""
+
+#-------------------------------------------------------------
+def final_function(name):
+    x  = get_article_adv(name)
+    y = list(x[x['affliation'] != '']['affliation'])
+    t = list(x[x['affliation']!= '']['date'])
+    enm = len(y)
+    i = 0
+    main_keys = []
+    main_values = []
+    while(i != enm):
+        for i1 in y[i]:
+            main_keys.append(i1)
+        for i2 in t[i]:
+            main_values.append(i2)
+        i += 1
+    dict_final = dict(zip(main_values, main_keys))
+    x.dropna(inplace = True)
+    x.index = np.arange(len(x['author_list']))
+    alfa_list  =[]
+    for i in range(len(x['author_list'])):
+        for i1 in x['author_list'][i]:
+            alfa_list.append([x['publication'][i],pd.to_datetime(x['date'][i]),x['title'][i],i1])
+    
+    final_dataset = pd.DataFrame(alfa_list,columns=['publication','date','title','author'])
+    final_dataset['affiliation'] = final_dataset['author'].apply(university_lookup,args = ([dict_final]))
+    final_dataset['author_lower']  = final_dataset['author'].apply(lambda x: x.lower())
+    return final_dataset
+
+
+
+# ==============================================================================
+
+# manager
+def manage_adv(request):
+    if request.method == 'POST':
+
+        article = request.POST.get('author_name')
+        try:
+            data_1 = final_function(article)
+            return HttpResponse(data_1.to_html())
+
+        except:
+            return HttpResponse("error")
+
+
+
 
