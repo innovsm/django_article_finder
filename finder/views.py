@@ -156,6 +156,15 @@ def final_function(author_name):
 
     return alfa_11
 
+def date1(url):
+    example = "https://api.crossref.org/v1/works/{}".format(url.split(":")[1].strip().lower())
+    try:
+        json_data = pd.read_json(example, typ="Series")
+        return [json_data['message']['title'],json_data['message']['indexed']['date-time']]
+    except:
+        return ""
+
+
 #---------------------------------- ALL PROGRAM ENDS HERE-------------------------------------------------------
 
 # Create your views here.
@@ -180,17 +189,12 @@ def hello_world(request):
         article = request.POST.get('test_name')
         try:
            
-            #article_11 = article_finder_citation(article)   # provides the citation info'
+            article_11 = article_finder_citation(article)   # provides the citation info'
             article_22 = module(article)   # provides the article info
             abstract_data_1 = abstract_data(article_22[2][1])
             article_aff = affliation_author(article_22[1])
-        
-            final_data_1 = []
-            for i in range(article_22[4]):
-                
-                    data_13 = final_function(article_22[3][i])
-                    final_data_1.append([article_22[3][i],data_13])
-                    
+            date_1 = date1(article_22[1])
+                        
 
             
         except:
@@ -202,10 +206,12 @@ def hello_world(request):
         "doi":article_22[1],
         "download_link":article_22[2],
         "author_names":article_22[3],
-        "similar_article": final_data_1,
         "abstract_data": abstract_data_1,
         "affliation_data": article_aff[1],
-        "publication": article_aff[0]
+        "publication": article_aff[0],
+        "citation": article_11,
+        "date": date_1[1],
+        "title": date_1[0]
         })
 
 #---------------------------------------------------------------------------------
@@ -347,6 +353,8 @@ def manage_adv(request):
 
         except:
             return HttpResponse("error")
+
+
 
 
 
