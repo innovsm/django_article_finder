@@ -127,22 +127,24 @@ fieldset {
         </style>
     </head>
     <body> 
+		
         <div class="container">  
             <form id="contact" action="/alfa" method="post">
                {% csrf_token %}
               
               <h3><b>Article Finder</b></h3>
-              <h4>search using article title, author's name , or DOI</h4>
+              <h4>search using article title</h4>
               <fieldset>
                 <input placeholder="article name" type="text" tabindex="1" required autofocus name = "test_name">
               </fieldset>
               <fieldset>
                 <button name="submit" type="submit" id="contact-submit" data-submit="...Sending">Submit</button>
               </fieldset>
+			  <a href = "adv"><b>click for adcanced query<b></a> 
             </form>
            
           </div>
 
-        
+  
     </body>
 </html>
