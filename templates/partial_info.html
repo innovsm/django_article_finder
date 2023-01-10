@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <meta charset="utf-8">
+    <title>Result</title>
+    <style>
+      html {
+        font-family: sans-serif;
+        font-size: 23px;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        background-color: #FFFCC9;
+
+
+      }
+
+        body{ 
+          margin: 0;
+
+         }
+        canvas { width: 100%; height: 100% }
+        #alert{
+            text-align: center;
+            color: RED;
+        }
+
+    </style>
+</head>
+<body>
+    <h2 id = "alert"><b> this is partial result !!! , search in advanced query <a href = "adv">click here</a></b> </h2> <br>
+  
+    <div class = "alfa_1"> 
+    <h3> title of the Article </h3> ::> 
+    {{article_name}}<br>
+    <h3> citation </h3> ::> 
+    {{citation}} <br>
+    <h3> DOI (Digital Object Identifier) </h3> ::>
+    {{doi}}<br>
+    <h3> Abstraction and other information </h3> <a href = "{{abstract_data}}">click here </a><br>
+    <h3> Download links </h3><br>
+    {%for i in  download_link %}
+    <a href = "{{i}}">{{i}}</a><br>
+    {%endfor%}
+    <h3> authors  </h3> <br>
+    {%for i in author_names%}
+    <b> {{i}} </b> </br>
+    {% endfor %}
+  
+  
+    </div>
+    <button id ="show_article"> show_article</button>
+
+       <footer align = "right">
+        developed by Shubhanshu Mishra under Guidence of Dr.Pallavi Khatri
+      </footer>
+
+</body>
+</html>

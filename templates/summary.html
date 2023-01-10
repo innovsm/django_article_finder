@@ -30,6 +30,8 @@
     <div class = "alfa_1"> 
     <h3> title of the Article </h3> ::> 
     {{article_name}}<br>
+    <h3> citation </h3> ::> 
+    {{citation}} <br>
     <h3> DOI (Digital Object Identifier) </h3> ::>
     {{doi}}<br>
     <h3> Abstraction and other information </h3> <a href = "{{abstract_data}}">click here </a><br>
@@ -37,6 +39,8 @@
     {{affliation_data}} <br>
     <h3> publication house </h3> ::> 
     {{publication}}<br>
+    <h3> date of publication </h3>
+    {{date}} <br>
 
     <h3> Download links </h3><br>
     {%for i in  download_link %}
@@ -46,12 +50,8 @@
     {%for i in author_names%}
     <b> {{i}} </b> </br>
     {% endfor %}
-    <h3> articles by author </h1> <br>
-      <div id = "article_author"> 
-    {%for i in similar_article %}
-    {{i}}<br>
-    {% endfor %}
-      </div>
+  
+  
     </div>
     <button id ="show_article"> show_article</button>
     <!--
@@ -63,36 +63,32 @@
           <th> authors </th>
           <th>DOI</th>
           <th>abstract_link </th>
+          <th> citation </th>
           <th> affliation </th>
           <th> publication </th>
+          <th> date </th>
        
         </tr>
         <tr>
-          <td>{{article_name}}</td>
+          <td>{{title}}</td>
           <td>{{author_names}}</td>
           <td> {{doi}}</td>
           <td> {{abstract_data}} </td>
+          <td> {{citation}} </td>
           <td> {{affliation_data}} </td>
           <td> {{publication}} </td>
+          <td> {{date}} </td>
         
        </table>
-     <footer align = "right">
+       <footer align = "right">
         developed by Shubhanshu Mishra under Guidence of Dr.Pallavi Khatri
       </footer>
-    
       <script src="https://cdn.jsdelivr.net/gh/linways/table-to-excel@v1.0.4/dist/tableToExcel.js"></script>
     <script>
-      $("#article_author").hide();
       $('#table_hidden').hide();
+
     
-      $(document).ready(function(){
-        $("#show_article").click(function(){
-          $('#article_author').show();
-          $("#show_article").hide();
-        });
 
-
-      });
 
       $(document).ready(function(){
           $("#btnExport").click(function() {

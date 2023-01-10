@@ -185,20 +185,33 @@ def alfa_request(request):
 #---------------------------------------------------------------
 
 def hello_world(request):
-    if request.method == 'POST':
-        article = request.POST.get('test_name')
+    if request.method == 'GET':
+        article = request.GET.get('test_name')
+
         try:
            
             article_11 = article_finder_citation(article)   # provides the citation info'
+            print("1")
             article_22 = module(article)   # provides the article info
+            print("2")
             abstract_data_1 = abstract_data(article_22[2][1])
+            print("3")
+            
             article_aff = affliation_author(article_22[1])
+            print("4")
             date_1 = date1(article_22[1])
-                        
+            print("5")
+            
 
             
         except:
-            return "Error"
+            return render(request,"partial_info.html",{"article_name":article_22[0],
+            "doi":article_22[1],
+            "download_link":article_22[2],
+            "author_names":article_22[3],
+            "abstract_data": abstract_data_1,
+            "citation": article_11
+            })
   
            
         # title, doi, download_link, author_names,len_author_names, len_download_link
@@ -213,6 +226,7 @@ def hello_world(request):
         "date": date_1[1],
         "title": date_1[0]
         })
+
 
 #---------------------------------------------------------------------------------
 
@@ -254,7 +268,8 @@ def affliation_author(url):
     
 #---------------------------------------------------------------------------------
 
-def get_article_adv(article_name):
+def get_article_adv(article_name): # this function is for finding DOI
+
     doi_details = []
     final_list_dataframe = []
 
@@ -336,6 +351,14 @@ def final_function(name):
     final_dataset = pd.DataFrame(alfa_list,columns=['publication','date','title','author'])
     final_dataset['affiliation'] = final_dataset['author'].apply(university_lookup,args = ([dict_final]))
     final_dataset['author_lower']  = final_dataset['author'].apply(lambda x: x.lower())
+    list_1 = final_dataset['title']
+    list_2 = final_dataset['author_lower']
+    set_1 = list(zip(list_1, list_2))
+    html_code = []
+    for i in set_1:
+        html_code.append("<form action = '/adv_details' method = 'get'><input type = 'hidden' name= 'hidden_value' value = '{} {}'><input type = 'submit' value = 'article_details'></form>".format(i[1],i[0]))
+    final_dataset['link'] = np.array(html_code)
+
     return final_dataset
 
 
@@ -349,13 +372,40 @@ def manage_adv(request):
         article = request.POST.get('author_name')
         try:
             data_1 = final_function(article)
-            return HttpResponse(data_1.to_html())
+            return HttpResponse(data_1.to_html(escape=False))
 
         except:
             return HttpResponse("error")
+# handling advanced request
 
 
+def hello_world_adv(request):
+        if request.method == 'GET':
+            article = request.GET.get('hidden_value')
+            try:
+                article_11 = article_finder_citation(article)   # provides the citation info'
+                print("1")
+                article_22 = module(article)   # provides the article info
+                print("2")
+                abstract_data_1 = abstract_data(article_22[2][1])
+                print("3")
+                article_aff = affliation_author(article_22[1])
+                print("4")
+                date_1 = date1(article_22[1])
+                print("5")
 
+            except:
+                return HttpResponse("Error had occured")
+            return render(request,"summary.html",{"article_name":article_22[0],
 
-
+            "doi":article_22[1],
+            "download_link":article_22[2],
+            "author_names":article_22[3],
+            "abstract_data": abstract_data_1,
+            "affliation_data": article_aff[1],
+            "publication": article_aff[0],
+            "citation": article_11,
+            "date": date_1[1],
+            "title": date_1[0]
+            })
 
