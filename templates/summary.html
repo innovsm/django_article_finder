@@ -41,6 +41,9 @@
     {{publication}}<br>
     <h3> date of publication </h3>
     {{date}} <br>
+    <h3> Journal </h3> <br>
+    ::> {{journal}} <br>
+
 
     <h3> Download links </h3><br>
     {%for i in  download_link %}
@@ -50,10 +53,14 @@
     {%for i in author_names%}
     <b> {{i}} </b> </br>
     {% endfor %}
-  
+    <br>
+    <h3> Issues </h3>
+    ::> {{issue}}  <br>
+    <h3> volume </h3>
+    ::> {{volume}} <br>
   
     </div>
-    <button id ="show_article"> show_article</button>
+  
     <!--
       different matter
     -->

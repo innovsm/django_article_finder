@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect,request
+from django.http import HttpResponse
 # all functions will be here
 from urllib.request import urlopen 
 import pandas as pd
@@ -34,6 +34,24 @@ def abstract_data(url):
     data = BeautifulSoup(html, "html.parser")
     x = data.find("a").find_all_next()[3].attrs['href']
     return x
+
+def journal_issue_volumne(url):
+    html = urlopen(url)
+    data = BeautifulSoup(html, "html.parser")
+    final_list = []
+    for i in data.find_all("p"):
+        if "Journal" in i.text:
+            final_list.append(i.text.split(":")[1])  #journal
+        if "Volume" in i.text:
+            final_list.append(i.text.split(":")[1])  # volume
+        if "Issue" in i.text:
+            final_list.append(i.text.split(":")[1])   # issue
+    if(len(final_list) < 3):
+            
+            final_list.append("not found")
+            final_list.append("not found")
+            final_list.append("not found")
+    return final_list
 
 def article_finder_citation(url):
     query = scholar.search_pubs(url)
@@ -185,15 +203,19 @@ def alfa_request(request):
 #---------------------------------------------------------------
 
 def hello_world(request):
+
+    
     if request.method == 'GET':
         article = request.GET.get('test_name')
+    
 
         try:
            
             article_11 = article_finder_citation(article)   # provides the citation info'
             print("1")
             article_22 = module(article)   # provides the article info
-            print("2")
+            print(article_22[2][1])
+            journal_issue_volumne_1 = journal_issue_volumne(article_22[2][1])
             abstract_data_1 = abstract_data(article_22[2][1])
             print("3")
             
@@ -215,16 +237,22 @@ def hello_world(request):
   
            
         # title, doi, download_link, author_names,len_author_names, len_download_link
+        
         return render(request,"summary.html",{"article_name":article_22[0],
-        "doi":article_22[1],
-        "download_link":article_22[2],
-        "author_names":article_22[3],
-        "abstract_data": abstract_data_1,
-        "affliation_data": article_aff[1],
-        "publication": article_aff[0],
-        "citation": article_11,
-        "date": date_1[1],
-        "title": date_1[0]
+            "doi":article_22[1],
+            "download_link":article_22[2],
+            "author_names":article_22[3],
+            "abstract_data": abstract_data_1,
+            "affliation_data": article_aff[1],
+            "publication": article_aff[0],
+            "citation": article_11,
+            "date": date_1[1],
+            "title": date_1[0],
+            "journal": journal_issue_volumne_1[0],
+            "issue": journal_issue_volumne_1[1],
+            "volume": journal_issue_volumne_1[2]  
+        
+                                                                             
         })
 
 
