@@ -1,2 +1,2 @@
-# django_article_finder
-IT is state of the art web scraping tool for finding research article
+# research article finder
+IT is an open source project developed as a minor project for finding all the related information about research article , it a django based web app,Enjoy!
