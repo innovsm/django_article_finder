@@ -1,5 +1,4 @@
 django
 pandas
 numpy 
-scholarly
 bs4
