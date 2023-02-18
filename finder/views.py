@@ -4,11 +4,10 @@ from django.http import HttpResponse
 from urllib.request import urlopen 
 import pandas as pd
 from bs4 import BeautifulSoup
-from  scholarly import scholarly as scholar
 from django.shortcuts import render
 from django.views.generic import TemplateView
 import numpy as np
-
+import requests
 
 
 #-------------------------------------------------------------------------------
@@ -53,10 +52,60 @@ def journal_issue_volumne(url):
             final_list.append("not found")
     return final_list
 
-def article_finder_citation(url):
-    query = scholar.search_pubs(url)
-    x = next(query)
-    return x['num_citations']
+import random
+import time
+import requests
+from bs4 import BeautifulSoup
+
+def scrape_citations(query):
+    user_agents = [
+        'MyResearchBot/1.0',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+        'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36'
+    ]
+    headers = {
+        'User-Agent': random.choice(user_agents),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate',
+        'Referer': 'https://www.google.com',
+        'Connection': 'keep-alive',
+        'DNT': '1',
+        'Upgrade-Insecure-Requests': '1'
+    }
+
+    url = f"https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q={query}&btnG="
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, "html.parser")
+    citation_detail = []
+    data = soup.find_all("div", class_="gs_ri")
+    for item in data:
+        title = item.find("h3", class_="gs_rt").text
+        author = item.find("div", class_="gs_a").text
+        citation = item.find("div", class_="gs_fl").text
+        print("Title: ", title)
+        print("Author: ", author)
+        print("Citation: ", citation)
+        x = citation.split(" ")
+        y = []
+        for alfa in x:
+            if(alfa.isnumeric()):
+                y.append(alfa)
+
+        citation_detail.append(y[0])
+
+        print("\n")
+        
+        # Introduce a random sleep time to mimic human behavior
+        time.sleep(random.randint(1, 20))
+        headers['User-Agent'] = random.choice(user_agents)
+
+    return int(citation_detail[0])
+
 
 def module(article_name):
     title  = ""
@@ -130,10 +179,7 @@ def module(article_name):
 
     return [title, doi, download_link, author_names,len_author_names, len_download_link]
 
-def article_finder_citation(url):
-    query = scholar.search_pubs(url)
-    x = next(query)
-    return x['num_citations']
+
 
 
 # ---------------------------- app.py function ----------------------------
@@ -211,7 +257,7 @@ def hello_world(request):
 
         try:
            
-            article_11 = article_finder_citation(article)   # provides the citation info'
+            article_11 = scrape_citations(article)   # provides the citation info'
             print("1")
             article_22 = module(article)   # provides the article info
             print(article_22[2][1])
@@ -224,9 +270,26 @@ def hello_world(request):
             date_1 = date1(article_22[1])
             print("5")
             
+            return render(request,"summary.html",{"article_name":article_22[0],
+                "doi":article_22[1],
+                "download_link":article_22[2],
+                "author_names":article_22[3],
+                "abstract_data": abstract_data_1,
+                "affliation_data": article_aff[1],
+                "publication": article_aff[0],
+                "citation": article_11,
+                "date": date_1[1],
+                "title": date_1[0],
+                "journal": journal_issue_volumne_1[0],
+                "issue": journal_issue_volumne_1[1],
+                "volume": journal_issue_volumne_1[2]  
+                })
+        
+            
 
             
         except:
+            
             return render(request,"partial_info.html",{"article_name":article_22[0],
             "doi":article_22[1],
             "download_link":article_22[2],
@@ -237,23 +300,10 @@ def hello_world(request):
   
            
         # title, doi, download_link, author_names,len_author_names, len_download_link
-        
-        return render(request,"summary.html",{"article_name":article_22[0],
-            "doi":article_22[1],
-            "download_link":article_22[2],
-            "author_names":article_22[3],
-            "abstract_data": abstract_data_1,
-            "affliation_data": article_aff[1],
-            "publication": article_aff[0],
-            "citation": article_11,
-            "date": date_1[1],
-            "title": date_1[0],
-            "journal": journal_issue_volumne_1[0],
-            "issue": journal_issue_volumne_1[1],
-            "volume": journal_issue_volumne_1[2]  
-        
-                                                                             
-        })
+    
+
+
+
 
 
 #---------------------------------------------------------------------------------
@@ -347,47 +397,127 @@ def get_article_adv(article_name): # this function is for finding DOI
 
 
 #-------------------------------------------------------
-def university_lookup(author_name,dict_final):   #dict_final
-    try:
-        return dict_final[author_name]
-    except:
-        return ""
+
+
+def scrape_scholar(query):
+    query = query.lower()
+    page_number = 0
+    title_details =[]
+    author_details = []
+    affiliation_details = []
+    user_agents = [
+        'MyResearchBot/1.0',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+        'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/17.17134',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36'
+    ]
+    headers = {
+    'User-Agent': random.choice(user_agents),
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.5',
+    'Accept-Encoding': 'gzip, deflate',
+    'Referer': 'https://www.google.com',
+    'Connection': 'keep-alive',
+    'DNT': '1',
+    'Upgrade-Insecure-Requests': '1'
+    }
+
+    while page_number < 40:
+        url = f"https://scholar.google.com/scholar?start={page_number}&hl=en&as_sdt=0%2C5&q={query}&btnG="
+        response = requests.get(url, headers=headers)
+
+        soup = BeautifulSoup(response.text, "html.parser")
+        data = soup.find_all("div", class_="gs_ri")
+        if not data:
+            break
+        for item in data:
+            title = item.find("h3", class_="gs_rt").text
+            author = item.find("div", class_="gs_a").text
+            affiliation = item.find("div", class_="gs_rs").text.strip()
+
+            title_details.append(title)
+            author_details.append(author)
+            affiliation_details.append(affiliation)
+            #print(title_details)
+           # print(author_details)
+
+        page_number += 10
+        # Introduce a random sleep time to mimic human behavior
+        time.sleep(random.randint(1, 20))
+    return [title_details, author_details, affiliation_details]
+
 
 #-------------------------------------------------------------
-def final_function(name):
-    x  = get_article_adv(name)
-    y = list(x[x['affliation'] != '']['affliation'])
-    t = list(x[x['affliation']!= '']['date'])
-    enm = len(y)
-    i = 0
-    main_keys = []
-    main_values = []
-    while(i != enm):
-        for i1 in y[i]:
-            main_keys.append(i1)
-        for i2 in t[i]:
-            main_values.append(i2)
-        i += 1
-    dict_final = dict(zip(main_values, main_keys))
-    x.dropna(inplace = True)
-    x.index = np.arange(len(x['author_list']))
-    alfa_list  =[]
-    for i in range(len(x['author_list'])):
-        for i1 in x['author_list'][i]:
-            alfa_list.append([x['publication'][i],pd.to_datetime(x['date'][i]),x['title'][i],i1])
+def find_author(x,alfa):
+    x = str(x)
+    author_name = set(alfa.lower().split())
+    target_string = set(x.lower().split())
+    if(len(target_string.intersection(author_name)) >= 1):
+        return True
+    else:
+        return False
+def find_university(university,university_1):
+    university = str(university)
+    my_university  = set(university_1.lower().split())
+    main_university = set(university.lower().split())
+    if(len(main_university.intersection(my_university)) >= 1):
+        return True
+    else:
+        return False
+
+
+def final_function(name, affiliation,query):
+    final_dataset = pd.DataFrame()
+    print(name,affiliation)
+    # if affiliation is null
+
+    related_data = scrape_scholar(query+" "+name + " "+ affiliation)
+    final_dataset["article"] = related_data[0]
+    final_dataset['author_details']  = related_data[1]
+    final_dataset['affiliation_details'] = related_data[2]
     
-    final_dataset = pd.DataFrame(alfa_list,columns=['publication','date','title','author'])
-    final_dataset['affiliation'] = final_dataset['author'].apply(university_lookup,args = ([dict_final]))
-    final_dataset['author_lower']  = final_dataset['author'].apply(lambda x: x.lower())
-    list_1 = final_dataset['title']
-    list_2 = final_dataset['author_lower']
-    set_1 = list(zip(list_1, list_2))
+    # this case will mactch [KEYWORD , and author name]
+    if((affiliation == "") and (name != "")):  # for finding the data using author name
+
+        final_dataset['author_found'] = final_dataset['author_details'].apply(find_author,args=(name,))
+        final_dataset['author_found'].replace({None: False},inplace = True)
+        related_data_1 = final_dataset[final_dataset['author_found'] == True]
+        set_1 = list(related_data_1['article'])
+
+        # if both are present [prefrence to university name , better result]
+    elif(((affiliation != "")  and (name == ""))):
+
+        final_dataset['university_found'] = final_dataset['affiliation_details'].apply(find_university,args=(affiliation,))
+        final_dataset['university_found'].replace({None: False},inplace=True)
+        related_data_1 = final_dataset[final_dataset['university_found'] == True]
+        set_1 = list(related_data_1['article'])
+
+    else:
+        related_data_1 = final_dataset
+        set_1 = related_data[0] # this will be using query, if no [name and affliation ]
+    #print(set_1)
+    
+
+
+
+
+
+    
+
+
+
     html_code = []
     for i in set_1:
-        html_code.append("<form action = '/adv_details' method = 'get'><input type = 'hidden' name= 'hidden_value' value = '{} {}'><input type = 'submit' value = 'article_details'></form>".format(i[1],i[0]))
-    final_dataset['link'] = np.array(html_code)
 
-    return final_dataset
+        html_code.append("<form action = '/adv_details' method = 'get'><input type = 'hidden' name= 'hidden_value' value = '{}'><input type = 'submit' value = 'article_details'></form>".format(i))
+    print(len(html_code), related_data_1.shape)
+    related_data_1['link'] = html_code
+    print(related_data_1)
+
+    return related_data_1
 
 
 
@@ -397,10 +527,18 @@ def final_function(name):
 def manage_adv(request):
     if request.method == 'POST':
 
-        article = request.POST.get('author_name')
+        author_name = request.POST.get('author_name')
+        affliation_details  = request.POST.get('affliation_name')
+        query = request.POST.get('query')
+        print(author_name, affliation_details, query)
+
+        
         try:
-            data_1 = final_function(article)
-            return HttpResponse(data_1.to_html(escape=False))
+          
+            data_1 = final_function(author_name, affliation_details,query)
+            html_table = data_1.to_html(escape=False)
+         
+            return render(request, 'adv_table.html', {'html_table': html_table})
 
         except:
             return HttpResponse("error")
@@ -411,7 +549,7 @@ def hello_world_adv(request):
         if request.method == 'GET':
             article = request.GET.get('hidden_value')
             try:
-                article_11 = article_finder_citation(article)   # provides the citation info'
+                article_11 = scrape_citations(article)   # provides the citation info'
                 print("1")
                 article_22 = module(article)   # provides the article info
                 print("2")
@@ -436,4 +574,3 @@ def hello_world_adv(request):
             "date": date_1[1],
             "title": date_1[0]
             })
-
