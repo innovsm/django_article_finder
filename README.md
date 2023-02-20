@@ -12,6 +12,9 @@ What things you need to install the software and how to install them
 
 1. Here is a link to one of the VPN apps  ::> https://www.microsoft.com/store/productId/9WZDNCRDFNG7
 2. Python environment in your local system
+3. clone= [ git clone https://github.com/innovsm/django_article_finder.git]
+<img width="454" alt="image" src="https://user-images.githubusercontent.com/81454420/220107550-3937fb0d-ca24-4299-8b5b-2247b3026317.png">
+
 
 
 <h1>License </h1>
